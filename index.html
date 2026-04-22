@@ -182,7 +182,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </head>
 <body>
 <!-- LOGIN OVERLAY -->
-<div class="login-overlay" id="login-overlay" style="display:flex">
+<div class="login-overlay" id="login-overlay" style="display:none">
   <div class="login-card">
     <div class="login-logo">WP</div>
     <div class="login-title">Plánovač práce</div>
@@ -195,7 +195,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   </div>
 </div>
 
-<div class="shell" id="app-shell" style="display:none">
+<div class="shell" id="app-shell" style="display:grid">
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-mark">
@@ -1110,8 +1110,10 @@ function skipLogin(){
 }
 
 function showApp(show){
-  document.getElementById('login-overlay').style.display = show ? 'none' : 'flex';
-  document.getElementById('app-shell').style.display = show ? 'grid' : 'none';
+  const overlay = document.getElementById('login-overlay');
+  const shell = document.getElementById('app-shell');
+  if(overlay) overlay.style.display = show ? 'none' : 'flex';
+  if(shell) shell.style.display = show ? 'grid' : 'none';
 }
 
 function setSyncStatus(state, label){
@@ -1258,19 +1260,27 @@ document.getElementById('gantt-from').value=todayStr();
 document.getElementById('gantt-to').value=addDays(todayStr(),30);
 renderAll();
 
-// Wait for MSAL to be available then init
-function waitForMsal(tries){
-  if(tries<=0){
-    console.warn('MSAL not loaded, showing app without sync');
-    showApp(true);
-    return;
+// Show login button in sidebar after app loads
+// Try MSAL in background - don't block UI
+setTimeout(()=>{
+  try{
+    if(typeof msal !== 'undefined'){
+      initMsal();
+    } else {
+      // MSAL not loaded - just show sync button manually
+      renderSyncButton();
+    }
+  } catch(e){
+    console.warn('MSAL init error:', e);
   }
-  if(typeof msal !== 'undefined'){
-    initMsal();
-  } else {
-    setTimeout(()=>waitForMsal(tries-1), 200);
-  }
-}
-waitForMsal(20);</script>
+}, 500);
+
+function renderSyncButton(){
+  const el = document.getElementById('user-area');
+  if(el) el.innerHTML = `<button class="btn-ms btn-sm" onclick="msLogin()">
+    <svg width="14" height="14" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+    MS Login
+  </button>`;
+}</script>
 </body>
 </html>
