@@ -182,7 +182,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </head>
 <body>
 <!-- LOGIN OVERLAY -->
-<div class="login-overlay" id="login-overlay">
+<div class="login-overlay" id="login-overlay" style="display:flex">
   <div class="login-card">
     <div class="login-logo">WP</div>
     <div class="login-title">Plánovač práce</div>
@@ -1257,6 +1257,20 @@ document.getElementById('startDate').value=todayStr();
 document.getElementById('gantt-from').value=todayStr();
 document.getElementById('gantt-to').value=addDays(todayStr(),30);
 renderAll();
-initMsal();</script>
+
+// Wait for MSAL to be available then init
+function waitForMsal(tries){
+  if(tries<=0){
+    console.warn('MSAL not loaded, showing app without sync');
+    showApp(true);
+    return;
+  }
+  if(typeof msal !== 'undefined'){
+    initMsal();
+  } else {
+    setTimeout(()=>waitForMsal(tries-1), 200);
+  }
+}
+waitForMsal(20);</script>
 </body>
 </html>
